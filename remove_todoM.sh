@@ -3,8 +3,8 @@
 
 # script from hacker-man Marcel Petrick to remove all his superfluous debug-code in one washing-up!
 # questions, answers: mail@marcelpetrick.it
-# date: 20170519
-# version: 4
+# date: 20170521
+# version: 45
 # todo: make the searchstring case-independent and maybe some variable ..
 # todo: make it use GNU parallel
 
@@ -12,23 +12,27 @@ IFS=$'\n'; #deal with the "filename with spaces"-issue ..
 
 echo "## BEGIN ##"
 checkAndFix() {
-	# check first if the file contains the string at all to prevent unnecessary touched files
-	if grep -q -i 'todoM' $1; then
-		echo "clean now: $1"
-		# replace all
-		sed -n '/todoM/!p' $1 > tempfile
-		mv tempfile $1
-	fi
+    # check first if the file contains the string at all to prevent unnecessary touched files
+    if grep -q -i 'todoM' $1; then
+        echo "clean now: $1"
+        # replace all
+        sed -n '/todoM/!p' $1 > tempfile
+        mv tempfile $1
+    fi
 }
 export -f checkAndFix # needed to make it known and useable with GNU parallel
 
 # the workhorse ..
 echo "0. create now the file-result-list"
-FILELIST=`find . -name '*.h' -or -name '*.cpp'` # get all files inside the current folder which fit by suffix
-#echo "1. print now the list: $FILELIST"
+#FILELIST=`find . -name '*.h' -or -name '*.cpp'` # get all files inside the current folder which fit by suffix
+CURRENTBRANCH=`git rev-parse --abbrev-ref HEAD`
+echo "1. print now the current branch: $CURRENTBRANCH"
+FILELIST=`git diff --name-only master $CURRENTBRANCH --no-merges`
+echo "1. print now the list: $FILELIST"
 #exit 1
 echo "2. calling now GNU parallel"
 parallel  -j16 --bar checkAndFix ::: $FILELIST
 echo "## DONE :) ##"
 
-exit 1
+exit 0
+
